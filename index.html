@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ghana Polio Immunization Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --red:    #c0392b;
+      --gold:   #d4a017;
+      --green:  #2d6a4f;
+      --ink:    #0f1b0e;
+      --cream:  #f5f0e8;
+      --muted:  #8a7f72;
+      --border: #d6cfc4;
+      --card:   #faf7f2;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .hero-stripe {
+      background: var(--red);
+      height: 6px;
+      width: 100%;
+    }
+
+    .hero-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 6vw 4rem;
+      position: relative;
+    }
+
+    /* large background text */
+    .hero-bg-text {
+      position: absolute;
+      top: 50%; left: -2vw;
+      transform: translateY(-50%);
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(120px, 22vw, 320px);
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(192,57,43,0.10);
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+    }
+
+    .eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.2s forwards;
+    }
+    .eyebrow::before {
+      content: '';
+      display: block;
+      width: 32px; height: 1px;
+      background: var(--red);
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 7vw, 6.5rem);
+      line-height: 1.0;
+      letter-spacing: -0.02em;
+      max-width: 14ch;
+      position: relative; z-index: 1;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.35s forwards;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--red);
+    }
+
+    .hero-subtitle {
+      margin-top: 2rem;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      color: var(--muted);
+      max-width: 52ch;
+      position: relative; z-index: 1;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.5s forwards;
+    }
+
+    .hero-cta-row {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.65s forwards;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.6rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      position: relative; z-index: 1;
+    }
+    .btn:hover { background: var(--ink); color: var(--cream); }
+    .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+    .btn.primary:hover { background: #a93226; border-color: #a93226; }
+
+    .hero-meta {
+      padding: 2rem 6vw;
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.8s forwards;
+    }
+
+    .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .meta-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .meta-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      color: var(--red);
+      line-height: 1;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%; overflow: hidden;
+      line-height: 0;
+    }
+    .divider svg { display: block; width: 100%; }
+
+    /* ── SECTION ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 6rem 6vw;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 3.5rem;
+    }
+    .section-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      flex-shrink: 0;
+      padding-top: 0.3rem;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    /* ── DISTRICTS ── */
+    .districts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+
+    .district-card {
+      padding: 2.5rem;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s;
+    }
+    .district-card:last-child { border-right: none; }
+    .district-card:hover { background: var(--card); }
+
+    .district-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+    }
+    .district-card.accra::before  { background: #1f497d; }
+    .district-card.kumasi::before { background: #70ad47; }
+    .district-card.tamale::before { background: var(--red); }
+
+    .district-flag {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 1.2rem;
+    }
+    .accra  .district-flag { background: #dce8f5; }
+    .kumasi .district-flag { background: #e8f4e0; }
+    .tamale .district-flag { background: #fdecea; }
+
+    .district-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 0.3rem;
+    }
+    .district-region {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .district-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 1.5rem;
+    }
+    .dstat-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .dstat-lbl {
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .accra  .dstat-val { color: #1f497d; }
+    .kumasi .dstat-val { color: #3d7a1f; }
+    .tamale .dstat-val { color: var(--red); }
+
+    /* ── ANALYSES ── */
+    .analyses-bg { background: var(--ink); color: var(--cream); }
+    .analyses-bg .section-title { color: var(--cream); }
+    .analyses-bg .section-num { color: rgba(245,240,232,0.35); }
+
+    .analyses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1px;
+      background: rgba(245,240,232,0.12);
+    }
+
+    .analysis-item {
+      background: var(--ink);
+      padding: 2rem;
+      transition: background 0.2s;
+    }
+    .analysis-item:hover { background: #1a2a19; }
+
+    .analysis-icon {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    .analysis-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      color: var(--gold);
+    }
+    .analysis-desc {
+      font-size: 0.78rem;
+      line-height: 1.65;
+      color: rgba(245,240,232,0.6);
+    }
+
+    /* ── FILES ── */
+    .files-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.2rem 1.8rem;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--ink);
+      transition: background 0.15s;
+    }
+    .file-row:last-child { border-bottom: none; }
+    .file-row:hover { background: var(--card); }
+
+    .file-icon {
+      font-size: 1.1rem;
+      width: 32px; text-align: center;
+    }
+    .file-info { min-width: 0; }
+    .file-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+    .file-badge {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── SETUP ── */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+    @media (max-width: 700px) { .setup-grid { grid-template-columns: 1fr; } }
+
+    .setup-block h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .setup-block h3::before {
+      content: '';
+      display: block;
+      width: 20px; height: 2px;
+      background: var(--red);
+    }
+
+    pre {
+      background: var(--ink);
+      color: #a8d5a2;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.75;
+      padding: 1.5rem;
+      overflow-x: auto;
+      border-left: 3px solid var(--red);
+    }
+    pre .c { color: rgba(168,213,162,0.45); }
+    pre .k { color: #f0c080; }
+    pre .s { color: #80c8e0; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      color: rgba(245,240,232,0.5);
+      padding: 2.5rem 6vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+    }
+    footer a { color: var(--gold); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-brand {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .hero-body { padding: 4rem 5vw 3rem; }
+      section { padding: 4rem 5vw; }
+      .hero-meta { gap: 1.5rem; padding: 1.5rem 5vw; }
+      .district-card { border-right: none; border-bottom: 1px solid var(--border); }
+      .district-card:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="hero">
+  <div class="hero-stripe"></div>
+
+  <div class="hero-body">
+    <div class="hero-bg-text" aria-hidden="true">POLIO</div>
+
+    <p class="eyebrow">DHIS2 · Ghana · 2018–2024</p>
+
+    <h1 class="hero-title">
+      Ghana <em>Polio</em><br>Immunization<br>Analysis
+    </h1>
+
+    <p class="hero-subtitle">
+      A reproducible trend analysis of oral polio vaccination coverage,
+      AFP surveillance, and zero-dose children across three districts —
+      Accra Metro, Kumasi Metro, and Tamale Metro — using DHIS2 data
+      analysed in R and Excel.
+    </p>
+
+    <div class="hero-cta-row">
+      <a class="btn primary" href="data/Polio_DHIS2_Ghana_Districts.xlsx" download>
+        ↓ Download Excel Data
+      </a>
+      <a class="btn" href="https://github.com/YOUR_USERNAME/ghana-polio-analysis" target="_blank">
+        ⌥ View on GitHub
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-meta">
+    <div class="meta-item">
+      <span class="meta-label">Records</span>
+      <span class="meta-value">84</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Districts</span>
+      <span class="meta-value">3</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Years</span>
+      <span class="meta-value">7</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Quarters</span>
+      <span class="meta-value">28</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Indicators</span>
+      <span class="meta-value">6</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DISTRICTS ══════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <span class="section-num">01 /</span>
+    <h2 class="section-title">Study Districts</h2>
+  </div>
+
+  <div class="districts-grid reveal">
+    <div class="district-card accra">
+      <div class="district-flag">🏙️</div>
+      <div class="district-name">Accra Metro</div>
+      <div class="district-region">Greater Accra Region</div>
+      <div class="district-stats">
+        <div>
+          <div class="dstat-val">~74%</div>
+          <div class="dstat-lbl">Baseline OPV3</div>
+        </div>
+        <div>
+          <div class="dstat-val">18k+</div>
+          <div class="dstat-lbl">Target Children</div>
+        </div>
+        <div>
+          <div class="dstat-val">High</div>
+          <div class="dstat-lbl">Urban Density</div>
+        </div>
+        <div>
+          <div class="dstat-val">28</div>
+          <div class="dstat-lbl">Quarters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="district-card kumasi">
+      <div class="district-flag">🌿</div>
+      <div class="district-name">Kumasi Metro</div>
+      <div class="district-region">Ashanti Region</div>
+      <div class="district-stats">
+        <div>
+          <div class="dstat-val">~69%</div>
+          <div class="dstat-lbl">Baseline OPV3</div>
+        </div>
+        <div>
+          <div class="dstat-val">15k+</div>
+          <div class="dstat-lbl">Target Children</div>
+        </div>
+        <div>
+          <div class="dstat-val">High</div>
+          <div class="dstat-lbl">Urban Density</div>
+        </div>
+        <div>
+          <div class="dstat-val">28</div>
+          <div class="dstat-lbl">Quarters</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="district-card tamale">
+      <div class="district-flag">🌾</div>
+      <div class="district-name">Tamale Metro</div>
+      <div class="district-region">Northern Region</div>
+      <div class="district-stats">
+        <div>
+          <div class="dstat-val">~58%</div>
+          <div class="dstat-lbl">Baseline OPV3</div>
+        </div>
+        <div>
+          <div class="dstat-val">11k+</div>
+          <div class="dstat-lbl">Target Children</div>
+        </div>
+        <div>
+          <div class="dstat-val">Priority</div>
+          <div class="dstat-lbl">District Type</div>
+        </div>
+        <div>
+          <div class="dstat-val">28</div>
+          <div class="dstat-lbl">Quarters</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ ANALYSES ══════════════════ -->
+<section class="analyses-bg">
+  <div class="section-header reveal">
+    <span class="section-num">02 /</span>
+    <h2 class="section-title">Analyses Performed</h2>
+  </div>
+
+  <div class="analyses-grid reveal">
+    <div class="analysis-item">
+      <span class="analysis-icon">📈</span>
+      <div class="analysis-name">OPV3 Coverage Trend</div>
+      <div class="analysis-desc">Quarterly coverage rates per district with linear trend lines and statistical significance testing.</div>
+    </div>
+    <div class="analysis-item">
+      <span class="analysis-icon">🔮</span>
+      <div class="analysis-name">ETS Forecasting</div>
+      <div class="analysis-desc">Error-Trend-Seasonality model projecting OPV3 coverage and AFP cases 4 quarters ahead with 80% and 95% confidence intervals.</div>
+    </div>
+    <div class="analysis-item">
+      <span class="analysis-icon">🌀</span>
+      <div class="analysis-name">STL Decomposition</div>
+      <div class="analysis-desc">Seasonal-Trend decomposition separating the trend, seasonal, and remainder components of coverage series.</div>
+    </div>
+    <div class="analysis-item">
+      <span class="analysis-icon">🚨</span>
+      <div class="analysis-name">AFP Surveillance</div>
+      <div class="analysis-desc">Acute Flaccid Paralysis case counts with 3-period moving average for smoothed surveillance signal detection.</div>
+    </div>
+    <div class="analysis-item">
+      <span class="analysis-icon">💊</span>
+      <div class="analysis-name">Dropout Analysis</div>
+      <div class="analysis-desc">OPV1→OPV3 dropout rates measuring children who started but did not complete the vaccine series.</div>
+    </div>
+    <div class="analysis-item">
+      <span class="analysis-icon">🔍</span>
+      <div class="analysis-name">Zero-Dose Tracking</div>
+      <div class="analysis-desc">Children who received no OPV dose — a WHO/UNICEF equity priority indicator for outreach targeting.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FILES ══════════════════ -->
+<section>
+  <div class="section-header reveal">
+    <span class="section-num">03 /</span>
+    <h2 class="section-title">Project Files</h2>
+  </div>
+
+  <div class="files-list reveal">
+    <a class="file-row" href="data/Polio_DHIS2_Ghana_Districts.xlsx" download>
+      <span class="file-icon">📊</span>
+      <div class="file-info">
+        <div class="file-name">Polio_DHIS2_Ghana_Districts.xlsx</div>
+        <div class="file-desc">Master dataset — 84 records, 5 sheets: Raw Data, Coverage Trends, AFP Surveillance, Dropout Rate, Zero-Dose Children</div>
+      </div>
+      <span class="file-badge">Excel</span>
+    </a>
+    <a class="file-row" href="R/run_all.R">
+      <span class="file-icon">▶</span>
+      <div class="file-info">
+        <div class="file-name">R/run_all.R</div>
+        <div class="file-desc">Master pipeline script — runs all four analysis steps end-to-end</div>
+      </div>
+      <span class="file-badge">R</span>
+    </a>
+    <a class="file-row" href="R/01_load_clean.R">
+      <span class="file-icon">🔧</span>
+      <div class="file-info">
+        <div class="file-name">R/01_load_clean.R</div>
+        <div class="file-desc">Data import from Excel or DHIS2 API, cleaning, and feature engineering</div>
+      </div>
+      <span class="file-badge">R</span>
+    </a>
+    <a class="file-row" href="R/02_trend_analysis.R">
+      <span class="file-icon">📉</span>
+      <div class="file-info">
+        <div class="file-name">R/02_trend_analysis.R</div>
+        <div class="file-desc">Linear regression models, STL decomposition, annual summaries, district comparison</div>
+      </div>
+      <span class="file-badge">R</span>
+    </a>
+    <a class="file-row" href="R/03_forecasting.R">
+      <span class="file-icon">🔮</span>
+      <div class="file-info">
+        <div class="file-name">R/03_forecasting.R</div>
+        <div class="file-desc">ETS forecasting for coverage and AFP, next 4 quarters per district</div>
+      </div>
+      <span class="file-badge">R</span>
+    </a>
+    <a class="file-row" href="R/04_visualizations.R">
+      <span class="file-icon">🎨</span>
+      <div class="file-info">
+        <div class="file-name">R/04_visualizations.R</div>
+        <div class="file-desc">6-panel ggplot2 dashboard — coverage, AFP, dropout, zero-dose, annual bars, STL decomposition</div>
+      </div>
+      <span class="file-badge">R</span>
+    </a>
+    <a class="file-row" href="docs/data_dictionary.md">
+      <span class="file-icon">📖</span>
+      <div class="file-info">
+        <div class="file-name">docs/data_dictionary.md</div>
+        <div class="file-desc">Full variable definitions — raw and derived indicators with formulas and notes</div>
+      </div>
+      <span class="file-badge">Docs</span>
+    </a>
+    <a class="file-row" href="excel/analysis_guide.md">
+      <span class="file-icon">📋</span>
+      <div class="file-info">
+        <div class="file-name">excel/analysis_guide.md</div>
+        <div class="file-desc">Step-by-step Excel instructions — PivotTables, conditional formatting, trendlines, formulas</div>
+      </div>
+      <span class="file-badge">Docs</span>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════ SETUP ══════════════════ -->
+<section style="background: var(--card); border-top: 1px solid var(--border);">
+  <div class="section-header reveal">
+    <span class="section-num">04 /</span>
+    <h2 class="section-title">Quick Start</h2>
+  </div>
+
+  <div class="setup-grid">
+    <div class="setup-block reveal">
+      <h3>Run in R</h3>
+      <pre><span class="c"># Clone and run</span>
+git clone https://github.com/
+  YOUR_USERNAME/ghana-polio-analysis
+
+<span class="k">setwd</span>(<span class="s">"ghana-polio-analysis"</span>)
+<span class="k">source</span>(<span class="s">"R/run_all.R"</span>)
+
+<span class="c"># Outputs saved to outputs/</span>
+<span class="c"># dashboard_full.png + 6 charts</span></pre>
+    </div>
+
+    <div class="setup-block reveal">
+      <h3>Connect to DHIS2 API</h3>
+      <pre><span class="c"># In R/01_load_clean.R</span>
+USE_API &lt;- <span class="k">TRUE</span>
+
+DHIS2_BASE_URL &lt;- <span class="s">"https://your-instance
+  .dhis2.org"</span>
+DHIS2_USERNAME &lt;- <span class="s">"your_username"</span>
+DHIS2_PASSWORD &lt;- <span class="s">"your_password"</span>
+
+<span class="c"># Then run:</span>
+<span class="k">source</span>(<span class="s">"R/run_all.R"</span>)</pre>
+    </div>
+
+    <div class="setup-block reveal">
+      <h3>Deploy GitHub Pages</h3>
+      <pre>git add index.html
+git commit -m <span class="s">"Add GitHub Pages"</span>
+git push
+
+<span class="c"># In repo Settings:</span>
+<span class="c"># Pages → Deploy from branch</span>
+<span class="c"># Branch: main / root</span>
+<span class="c"># → Save</span></pre>
+    </div>
+
+    <div class="setup-block reveal">
+      <h3>Replace Sample Data</h3>
+      <pre><span class="c"># Export from DHIS2 as .xlsx</span>
+<span class="c"># Paste into DHIS2_Raw_Data sheet</span>
+<span class="c"># Match column headers exactly:</span>
+
+Period | District | Region
+Target_Children
+OPV0–3_Doses | AFP_Cases
+Zero_Dose_Children
+
+<span class="c"># All sheets update automatically</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer>
+  <span class="footer-brand">Ghana Polio Analysis</span>
+  <span>DHIS2 · R · Excel · 2018–2024 · MIT License</span>
+  <span>
+    <a href="https://github.com/YOUR_USERNAME/ghana-polio-analysis" target="_blank">GitHub →</a>
+  </span>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.12 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
